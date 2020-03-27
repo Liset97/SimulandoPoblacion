@@ -20,7 +20,7 @@ def Exp(l):
 def PF(edad,sexo):
     if sexo=="M":
         if edad < 12: return 0.02
-        if edad < 45: return 0.1
+        if edad < 45: return 0.06
         if edad < 76: return 0.3
         if edad <= 125: return 1
     else:
@@ -32,9 +32,9 @@ def PF(edad,sexo):
 #Probabilidad de que una mujer salga embaraza segun la edad----Uniforme
 def PE(edad):
     if 12 <= edad <15: return 0.2
-    if 15 <= edad <21: return 0.6
+    if 15 <= edad <21: return 0.8
     if 21 <= edad <35: return 0.8
-    if 35 <= edad <45: return 0.4
+    if 35 <= edad <45: return 0.6
     if 45 <= edad <60: return 0.2
     if 60 <= edad <=125: return 0.05
 
@@ -52,9 +52,9 @@ def HijosDeseados(valor):
 #Probabilidad de desear pareja segun la edad-------------Uniforme
 def DesearPareja(edad):
     if 12 <= edad <15: return 0.6
-    if 15 <= edad <21: return 0.65
+    if 15 <= edad <21: return 0.8
     if 21 <= edad <35: return 0.8
-    if 35 <= edad <45: return 0.6
+    if 35 <= edad <45: return 0.7
     if 45 <= edad <60: return 0.5
     return 0
 
@@ -94,9 +94,10 @@ def SeleccionSexo():
     else: return "F"
 
 class Persona:
-    def __init__(self,idc,sexo):
+    def __init__(self,idc,edad,sexo):
         self.id=idc
-        self.edad=1
+        self.edad=edad
+        #print(self.edad)
         self.sexo=sexo
         self.estado="S"
         self.CantHijos=0
@@ -110,11 +111,11 @@ class Persona:
         self.PeriodoSola=0
         self.idPareja=0
     
-    ##Este metodo es para Actualizar las variables que necesitan cambios por la edad
+    ##Este metodo es para Actualizar las variables que necesitan cambios por la  y se hace anual
     def Actualiza(self):
         u=Uniforme(0,1)
         f=PF(self.edad,self.sexo)
-        if(u<=f):
+        if(u<f and self.embarazada==False):
             self.muerto=True
         y=Uniforme(0,1)
         if(y <= DesearPareja(self.edad)):
@@ -147,7 +148,7 @@ class Simulacion():
         self.CEMultiples=0
         self.CNacimientos=0
         self.PoblacionT=0
-        self.TFinal=100
+        self.TFinal=50
         self.bebes={}
         self.Inicialmente(m,h)
 
@@ -156,11 +157,13 @@ class Simulacion():
         self.PoblacionT=m+h
         for i in range(m):
             idp=rd.randint(0,2**31)
-            P=Persona(idp,"M")
+            e=Uniforme(1,90)
+            P=Persona(idp,e,"F")
             self.personas[idp]=P
         for i in range(h):
             idp=rd.randint(0,2**31)
-            P=Persona(idp,"F")
+            e=Uniforme(1,90)
+            P=Persona(idp,e,"M")
             self.personas[idp]=P
         self.mesesActuales=1
         self.tiempo=1
@@ -188,7 +191,7 @@ class Simulacion():
                         self.personas[self.personas[p].idPareja].idPareja=0
                         self.personas[p].idPareja=0
 
-                        print(self.personas[p].idPareja)
+                        #print(self.personas[p].idPareja)
                     #P=self.personas.pop(self.personas[p].id)
             
             for p in self.fallecidos:
@@ -203,7 +206,7 @@ class Simulacion():
                     self.personas[b]=self.bebes[b]
                 self.bebes.clear()
 
-                print(self.personas.__len__())
+                #print(self.personas.__len__())
                 for p in self.personas:
                     self.personas[p].PS()
                     if(self.personas[p].embarazada==True):
@@ -213,9 +216,10 @@ class Simulacion():
                         else:
                             #Ha nacido una persona
                             for j in range(self.personas[p].pornacer):
+                                self.personas[p].CantHijos=self.personas[p].CantHijos+1 
                                 idp=rd.randint(0,2**31)
                                 sexo=SeleccionSexo()
-                                P=Persona(idp,sexo)           
+                                P=Persona(idp,0,sexo)           
                                 self.bebes[idp]=P
                                 self.CNacimientos=self.CNacimientos+1
                                 self.CAEmbarazadas=self.CAEmbarazadas-1
@@ -225,13 +229,8 @@ class Simulacion():
                             self.personas[p].pornacer=0
                     
                     #Evento Embarazar:   
-                    if self.personas[p].estado=="C":
-                        #print(self.personas[p].estado)
-                        #print(str(self.annostranscurridos)+" "+str(self.tiempo))
-                        num=self.personas[p].idPareja
-                        #print(self.personas[p].id)
-                        #print(self.personas[num].id)
-                        if (self.personas[p].NMHijos-self.personas[p].CantHijos>1) and (self.personas[self.personas[p].idPareja].NMHijos-self.personas[self.personas[p].idPareja].CantHijos>1):
+                    if self.personas[p].estado=="C" and self.personas[p].sexo=="F":
+                        if abs(self.personas[p].NMHijos-self.personas[p].CantHijos) > 1 and abs(self.personas[self.personas[p].idPareja].NMHijos-self.personas[self.personas[p].idPareja].CantHijos) >1:
                             u=Uniforme(0,1)
                             if(u <= PE(self.personas[p].edad)):
                                 self.personas[p].embarazada=True
@@ -245,17 +244,12 @@ class Simulacion():
                                 
                     #Evento Ruptura
                     if self.personas[p].estado=="C":
-                        #print(self.personas[p].estado)
                         u=Uniforme(0,1)
                         if(u<=ProbabilidadRuptura()):
-                            print("Rompieron!!!!!")
-                            self.personas[p].estado="S"
-                            
+                            #print("Rompieron!!!!!")
+                            self.personas[p].estado="S"                   
                             self.personas[p].PeriodoSola=Exp(PeriodoSoledad(self.personas[p].edad))
                             self.personas[self.personas[p].idPareja].estado="S"
-                            #print(self.personas[p].estado)
-                            #print(self.personas[self.personas[p].idPareja].estado)
-                            
                             self.personas[self.personas[p].idPareja].PeriodoSola=Exp(PeriodoSoledad(self.personas[self.personas[p].idPareja].edad))
                             self.personas[self.personas[p].idPareja].idPareja=0
                             self.personas[p].idPareja=0

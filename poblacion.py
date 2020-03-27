@@ -103,18 +103,24 @@ class Persona:
         u=Uniforme(0,1)
         self.NMHijos=HijosDeseados(u)
         self.embarazada=False
+        self.pornacer=0
         self.me=0    #esta variable es para cuando embarazada=true empezar a contar el numero de meses
         self.muerto=False
-        self.dtp=0  ##deseo de tener pareja
+        self.dtp=False  ##deseo de tener pareja
         self.PeriodoSola=0
+        self.idPareja=0
     
     ##Este metodo es para Actualizar las variables que necesitan cambios por la edad
     def Actualiza():
-        self.dtp=DesearPareja(self.edad)
         u=Uniforme(0,1)
         f=PF(self.edad,self.sexo)
         if(u<=f):
             self.muerto=True
+        y=Uniforme(0,1)
+        if(y <= DesearPareja(self.edad)):
+            self.dtp=True
+        if self.PeriodoSola >0:
+            self.PeriodoSola= self.PeriodoSola-1
         
         
         
@@ -123,6 +129,8 @@ class Persona:
 #Ahora pasemos a definir las listas y las variables que necesitamos
 hombres=[]
 mujeres=[]
+solteros=[]
+embarazadas=[]
 personas={}
 fallecidos={}
 tiempo=0
@@ -136,7 +144,7 @@ CEmparejamientos=0
 CEMultiples=0
 CNacimientos=0
 PoblacionT=0
-
+TFinal=100
 
 def Inicialmente(m,h):
     PoblacionT=m+h
@@ -144,23 +152,72 @@ def Inicialmente(m,h):
         idp=rd.randint(0,2**31)
         P=Persona(idp,"M")
         mujeres.append(P)
+        solteros.append(P)
         personas[idp]=P
     for i in range(h):
         idp=rd.randint(0,2**31)
         P=Persona(idp,"F")
         hombres.append(P)
+        solteros.append(P)
         personas[idp]=P
     mesesActuales=1
     tiempo=1
 
 
 
+def SimularPoblacion():
+    for i in range(1,TFinal):
+        for p in personas:
+            p.edad=p.edad+1
+            p.Actualiza()
+
+        #Evento "Fallecer"
+        for p in personas:
+            if p.muerto==True:
+                P=personas.pop(p.id)
+                fallecidos[P.id]=P
+                CFallecidos=CFallecidos+1
+                #Si era casado, poner a la pareja en viud@ y actualizar el time de Soledad(Luto)
+                if P.estado=="C":
+                    personas[P.idPareja].estado="V"
+                    personas[P.idPareja].PeriodoSola=PeriodoSoledad(personas[P.idPareja].edad)
+
+                
+
+        while mesesActuales <= 12:
+            #Aqui le daremos seguimieto a las embarazadas y Al evento "Nacer"
+            for p in embarazadas:
+                #primero vamos a agregarle el contador a los meses de las embarazadas
+                if p.me < 9:
+                    p.me = p.me + 1
+                else:
+                    #Ha nacido una persona
+                    for j in range(p.pornacer):
+                        idp=rd.randint(0,2**31)
+                        sexo=SeleccionSexo()
+                        P=Persona(idp,sexo)
+                        if sexo=="M":
+                            mujeres.append(P)
+                        else: hombres.append(P)
+                        personas[idp]=P
+            
+            
+            #Evento Embarazar:
+            for p in mujeres:
+                if p.estado=="C" and (p.NMHijos-p.CantHijos>1) and (personas[p.idPareja].NMHijos-personas[p.idPareja].CantHijos>1):
+                    u=Uniforme(0,1)
+                    if(u <= )
+
+
+            
+                
 
 
 
 
 
 
+    
 
 
 

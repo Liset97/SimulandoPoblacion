@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 #### Leyenda:
 #### sexo: M de masculino y F de femenino
+#### estado: S de soltero, C de Casado y V de viudo
 
 def Uniforme(inf,sup):
     return np.random.uniform(inf,sup)
@@ -91,6 +92,71 @@ def SeleccionSexo():
     u = np.random.uniform(0,1)
     if u <= 0.5: return "M"
     else return "F"
+
+class Persona:
+    def __init__(self,id,sexo):
+        self.id=id
+        self.edad=1
+        self.sexo=sexo
+        self.estado="S"
+        self.CantHijos=0
+        u=Uniforme(0,1)
+        self.NMHijos=HijosDeseados(u)
+        self.embarazada=False
+        self.me=0    #esta variable es para cuando embarazada=true empezar a contar el numero de meses
+        self.muerto=False
+        self.dtp=0  ##deseo de tener pareja
+        self.PeriodoSola=0
+    
+    ##Este metodo es para Actualizar las variables que necesitan cambios por la edad
+    def Actualiza():
+        self.dtp=DesearPareja(self.edad)
+        u=Uniforme(0,1)
+        f=PF(self.edad,self.sexo)
+        if(u<=f):
+            self.muerto=True
+        
+        
+        
+
+
+#Ahora pasemos a definir las listas y las variables que necesitamos
+hombres=[]
+mujeres=[]
+personas={}
+fallecidos={}
+tiempo=0
+mesesActuales=0
+annostranscurridos=0
+CTEmbarazos=0
+CAEmbarazadas=0
+CRupturas=0
+CFallecidos=0
+CEmparejamientos=0
+CEMultiples=0
+CNacimientos=0
+PoblacionT=0
+
+
+def Inicialmente(m,h):
+    PoblacionT=m+h
+    for i in range(m):
+        idp=rd.randint(0,2**31)
+        P=Persona(idp,"M")
+        mujeres.append(P)
+        personas[idp]=P
+    for i in range(h):
+        idp=rd.randint(0,2**31)
+        P=Persona(idp,"F")
+        hombres.append(P)
+        personas[idp]=P
+    mesesActuales=1
+    tiempo=1
+
+
+
+
+
 
 
 

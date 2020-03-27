@@ -22,17 +22,17 @@ def PF(edad,sexo):
         if edad < 12: return 0.02
         if edad < 45: return 0.1
         if edad < 76: return 0.3
-        if edad <= 125: return 0.4
+        if edad <= 125: return 1
     else:
         if edad < 12: return 0.02
         if edad < 45: return 0.1
         if edad < 76: return 0.3
-        if edad <= 125: return 0.4
+        if edad <= 125: return 1
 
 #Probabilidad de que una mujer salga embaraza segun la edad----Uniforme
 def PE(edad):
     if 12 <= edad <15: return 0.2
-    if 15 <= edad <21: return 0.45
+    if 15 <= edad <21: return 0.6
     if 21 <= edad <35: return 0.8
     if 35 <= edad <45: return 0.4
     if 45 <= edad <60: return 0.2
@@ -47,7 +47,7 @@ def HijosDeseados(valor):
     if valor <= 0.35: return 3
     if valor <= 0.6: return 1
     if valor <= 0.75: return 2
-    else: return 0
+    else: return 1
 
 #Probabilidad de desear pareja segun la edad-------------Uniforme
 def DesearPareja(edad):
@@ -56,7 +56,6 @@ def DesearPareja(edad):
     if 21 <= edad <35: return 0.8
     if 35 <= edad <45: return 0.6
     if 45 <= edad <60: return 0.5
-    if 60 <= edad <=125: return 0.2
     return 0
 
 def EstablecerPareja(diferencia):
@@ -120,8 +119,12 @@ class Persona:
         y=Uniforme(0,1)
         if(y <= DesearPareja(self.edad)):
             self.dtp=True
-        if self.PeriodoSola >0:
+    
+    def PS(self):
+        if self.PeriodoSola >=1:
             self.PeriodoSola= self.PeriodoSola-1
+        else:
+            self.PeriodoSola=0
         
         
         
@@ -178,9 +181,9 @@ class Simulacion():
                     #Si era casado, poner a la pareja en viud@ y actualizar el time de Soledad(Luto)
                     if self.personas[p].estado=="C":
                         self.personas[p].estado="M"
-                        print("Fallecio un casado")
+                        #print("Fallecio un casado"+ " "+ str(self.personas[p].id)+" "+ str(self.personas[p].idPareja))
                         self.personas[self.personas[p].idPareja].estado="V"
-                        print(self.personas[self.personas[p].idPareja].estado)
+                        #print(self.personas[self.personas[p].idPareja].estado)
                         self.personas[self.personas[p].idPareja].PeriodoSola=PeriodoSoledad(self.personas[self.personas[p].idPareja].edad)
                         self.personas[self.personas[p].idPareja].idPareja=0
                         self.personas[p].idPareja=0
@@ -190,6 +193,7 @@ class Simulacion():
             
             for p in self.fallecidos:
                 if self.personas.__contains__(p)==True: 
+                    #print(self.personas[p].id)
                     self.personas.pop(p)
                     
 
@@ -201,6 +205,7 @@ class Simulacion():
 
                 print(self.personas.__len__())
                 for p in self.personas:
+                    self.personas[p].PS()
                     if(self.personas[p].embarazada==True):
                         #primero vamos a agregarle el contador a los meses de las embarazadas
                         if self.personas[p].me < 9:
@@ -221,10 +226,11 @@ class Simulacion():
                     
                     #Evento Embarazar:   
                     if self.personas[p].estado=="C":
-                        print(self.personas[p].estado)
-                        print(str(self.annostranscurridos)+" "+str(self.tiempo))
+                        #print(self.personas[p].estado)
+                        #print(str(self.annostranscurridos)+" "+str(self.tiempo))
                         num=self.personas[p].idPareja
-                        print(self.personas[num].id)
+                        #print(self.personas[p].id)
+                        #print(self.personas[num].id)
                         if (self.personas[p].NMHijos-self.personas[p].CantHijos>1) and (self.personas[self.personas[p].idPareja].NMHijos-self.personas[self.personas[p].idPareja].CantHijos>1):
                             u=Uniforme(0,1)
                             if(u <= PE(self.personas[p].edad)):
@@ -234,11 +240,12 @@ class Simulacion():
                                 self.personas[p].pornacer=EmbarazoMultiple(y)
                                 self.CTEmbarazos=self.CTEmbarazos+1
                                 self.CAEmbarazadas=self.CAEmbarazadas+1
+                                
                                 if self.personas[p].pornacer>1: self.CEMultiples= self.CEMultiples+1
                                 
                     #Evento Ruptura
                     if self.personas[p].estado=="C":
-                        print(self.personas[p].estado)
+                        #print(self.personas[p].estado)
                         u=Uniforme(0,1)
                         if(u<=ProbabilidadRuptura()):
                             print("Rompieron!!!!!")
@@ -246,8 +253,8 @@ class Simulacion():
                             
                             self.personas[p].PeriodoSola=Exp(PeriodoSoledad(self.personas[p].edad))
                             self.personas[self.personas[p].idPareja].estado="S"
-                            print(self.personas[p].estado)
-                            print(self.personas[self.personas[p].idPareja].estado)
+                            #print(self.personas[p].estado)
+                            #print(self.personas[self.personas[p].idPareja].estado)
                             
                             self.personas[self.personas[p].idPareja].PeriodoSola=Exp(PeriodoSoledad(self.personas[self.personas[p].idPareja].edad))
                             self.personas[self.personas[p].idPareja].idPareja=0
@@ -266,7 +273,8 @@ class Simulacion():
                                     self.personas[p].idPareja=self.personas[h].id
                                     self.personas[h].idPareja=self.personas[p].id
                                     self.CEmparejamientos=self.CEmparejamientos+1
-                                    print("Empareje!!")
+                                    print("Empareje!!  a "+str(self.personas[p].id)+" "+str(self.personas[h].id) )
+                                    break 
                 
                     self.mesesActuales=self.mesesActuales+1
                     self.tiempo=self.tiempo+1

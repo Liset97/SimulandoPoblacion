@@ -21,17 +21,17 @@ def PF(edad,sexo):
     if sexo=="M":
         if edad < 12: return 0.02
         if edad < 45: return 0.06
-        if edad < 76: return 0.3
-        if edad <= 125: return 1
+        if edad < 76: return 0.2
+        if edad <= 125: return 0.8
     else:
         if edad < 12: return 0.02
-        if edad < 45: return 0.1
-        if edad < 76: return 0.3
-        if edad <= 125: return 1
+        if edad < 45: return 0.06
+        if edad < 76: return 0.2
+        if edad <= 125: return 0.8
 
 #Probabilidad de que una mujer salga embaraza segun la edad----Uniforme
 def PE(edad):
-    if 12 <= edad <15: return 0.2
+    if 12 <= edad <15: return 0.4
     if 15 <= edad <21: return 0.8
     if 21 <= edad <35: return 0.8
     if 35 <= edad <45: return 0.6
@@ -84,8 +84,8 @@ def EmbarazoMultiple(valor):
     if valor <= 0.04: return 4
     if valor <= 0.08: return 3
     if valor <= 0.18: return 2
-    if valor <= 0.7: return 1
-    return 0
+    if valor <= 0.8: return 1
+    return 3
 
 #Metodo que define el sexo de una persona mediante una variable uniforme
 def SeleccionSexo():
@@ -113,10 +113,6 @@ class Persona:
     
     ##Este metodo es para Actualizar las variables que necesitan cambios por la  y se hace anual
     def Actualiza(self):
-        u=Uniforme(0,1)
-        f=PF(self.edad,self.sexo)
-        if(u<f and self.embarazada==False):
-            self.muerto=True
         y=Uniforme(0,1)
         if(y <= DesearPareja(self.edad)):
             self.dtp=True
@@ -126,6 +122,12 @@ class Persona:
             self.PeriodoSola= self.PeriodoSola-1
         else:
             self.PeriodoSola=0
+    
+    def Muere(self):
+        u=Uniforme(0,1)
+        f=PF(self.edad,self.sexo)
+        if(u<f and self.embarazada==False):
+            self.muerto=True
         
         
         
@@ -134,7 +136,7 @@ class Persona:
 #Ahora pasemos a definir las listas y las variables que necesitamos
 
 class Simulacion():
-    def __init__(self,m,h):
+    def __init__(self,m,h,s):
         self.personas={}
         self.fallecidos={}
         self.tiempo=0
@@ -148,9 +150,13 @@ class Simulacion():
         self.CEMultiples=0
         self.CNacimientos=0
         self.PoblacionT=0
-        self.TFinal=50
+        self.TFinal=s
         self.bebes={}
         self.Inicialmente(m,h)
+        self.Pob=[]
+        self.Time=[]
+        self.Nac=[]
+        self.Fal=[]
 
 
     def Inicialmente(self,m,h):
@@ -176,30 +182,7 @@ class Simulacion():
                 self.personas[p].edad=self.personas[p].edad + 1
                 self.personas[p].Actualiza()
 
-            #Evento "Fallecer"
-            for p in self.personas:
-                if self.personas[p].muerto==True:            
-                    self.fallecidos[p]=self.personas[p]
-                    self.CFallecidos=self.CFallecidos+1
-                    #Si era casado, poner a la pareja en viud@ y actualizar el time de Soledad(Luto)
-                    if self.personas[p].estado=="C":
-                        self.personas[p].estado="M"
-                        #print("Fallecio un casado"+ " "+ str(self.personas[p].id)+" "+ str(self.personas[p].idPareja))
-                        self.personas[self.personas[p].idPareja].estado="V"
-                        #print(self.personas[self.personas[p].idPareja].estado)
-                        self.personas[self.personas[p].idPareja].PeriodoSola=PeriodoSoledad(self.personas[self.personas[p].idPareja].edad)
-                        self.personas[self.personas[p].idPareja].idPareja=0
-                        self.personas[p].idPareja=0
-
-                        #print(self.personas[p].idPareja)
-                    #P=self.personas.pop(self.personas[p].id)
-            
-            for p in self.fallecidos:
-                if self.personas.__contains__(p)==True: 
-                    #print(self.personas[p].id)
-                    self.personas.pop(p)
-                    
-
+           
             while self.mesesActuales <= 12 and self.personas.__len__()>0:
                 #Aqui le daremos seguimieto a las embarazadas y Al evento "Nacer"
                 for b in self.bebes:
@@ -222,17 +205,19 @@ class Simulacion():
                                 P=Persona(idp,0,sexo)           
                                 self.bebes[idp]=P
                                 self.CNacimientos=self.CNacimientos+1
-                                self.CAEmbarazadas=self.CAEmbarazadas-1
-                                print("Nacio ALguien por tu vida!!")
+                                
+                                self.PoblacionT=self.PoblacionT+1
+                            self.CAEmbarazadas=self.CAEmbarazadas-1
                             self.personas[p].embarazada=False
                             self.personas[p].me=0
                             self.personas[p].pornacer=0
                     
                     #Evento Embarazar:   
-                    if self.personas[p].estado=="C" and self.personas[p].sexo=="F":
+                    if self.personas[p].estado=="C" and self.personas[p].sexo=="F" and self.personas[p].embarazada==False:
                         if abs(self.personas[p].NMHijos-self.personas[p].CantHijos) > 1 and abs(self.personas[self.personas[p].idPareja].NMHijos-self.personas[self.personas[p].idPareja].CantHijos) >1:
-                            u=Uniforme(0,1)
-                            if(u <= PE(self.personas[p].edad)):
+                            e=Exp(100)
+                            #u=Uniforme(0,1)
+                            if(e <= PE(self.personas[p].edad)):
                                 self.personas[p].embarazada=True
                                 self.personas[p].me=1
                                 y=Uniforme(0,1)
@@ -246,7 +231,6 @@ class Simulacion():
                     if self.personas[p].estado=="C":
                         u=Uniforme(0,1)
                         if(u<=ProbabilidadRuptura()):
-                            #print("Rompieron!!!!!")
                             self.personas[p].estado="S"                   
                             self.personas[p].PeriodoSola=Exp(PeriodoSoledad(self.personas[p].edad))
                             self.personas[self.personas[p].idPareja].estado="S"
@@ -267,30 +251,85 @@ class Simulacion():
                                     self.personas[p].idPareja=self.personas[h].id
                                     self.personas[h].idPareja=self.personas[p].id
                                     self.CEmparejamientos=self.CEmparejamientos+1
-                                    print("Empareje!!  a "+str(self.personas[p].id)+" "+str(self.personas[h].id) )
                                     break 
                 
                     self.mesesActuales=self.mesesActuales+1
                     self.tiempo=self.tiempo+1
             
+            for p in self.personas:
+                self.personas[p].Muere()
+
+             #Evento "Fallecer"
+            for p in self.personas:
+                if self.personas[p].muerto==True:            
+                    self.fallecidos[p]=self.personas[p]
+                    self.CFallecidos=self.CFallecidos+1
+                    #Si era casado, poner a la pareja en viud@ y actualizar el time de Soledad(Luto)
+                    if self.personas[p].estado=="C":
+                        self.personas[p].estado="M"
+                        self.personas[self.personas[p].idPareja].estado="V"
+                        self.personas[self.personas[p].idPareja].PeriodoSola=PeriodoSoledad(self.personas[self.personas[p].idPareja].edad)
+                        self.personas[self.personas[p].idPareja].idPareja=0
+                        self.personas[p].idPareja=0
+
+            
+            for p in self.fallecidos:
+                if self.personas.__contains__(p)==True: 
+                    #print(self.personas[p].id)
+                    self.personas.pop(p)
+                    
+
+
             self.mesesActuales=1
+            
+            #print(self.annostranscurridos)
+            self.Time.append(self.annostranscurridos)
+            self.Pob.append(self.PoblacionT)
+            self.Nac.append(self.CNacimientos)
+            self.Fal.append(self.CFallecidos)
             self.annostranscurridos=self.annostranscurridos+1
+    
 
 
 
 
 def Main():
     
-    Mujeres=50
-    Hombres=50
-   # Variables()
-   # Inicialmente(Mujeres,Hombres)
-   # SimularPoblacion()
-    Poblacion=Simulacion(Mujeres,Hombres)
+    Mujeres=int(input('Introduce la cantidad inicial de mujeres: '))
+    Hombres=int(input('Introduce la cantidad inicial de hombres: '))
+    Tiempo=int(input('Introduce los años que sea simular: '))
+   
+    Poblacion=Simulacion(Mujeres,Hombres,Tiempo)
     Poblacion.SimularPoblacion()
     
-    print(Poblacion.CNacimientos)
-    print(Poblacion.CFallecidos)
+    CMujeres=0
+    CHombres=0
+
+    for p in Poblacion.personas:
+        if Poblacion.personas[p].sexo=="F":
+            CMujeres=CMujeres+1
+        else:
+            CHombres=CHombres+1
+
+    print("************************************************")
+    print("Cantidad de años transcurridos: "+str(Poblacion.TFinal))
+    print("Cantidad de Nacimientos: "+ str(Poblacion.CNacimientos))
+    print("Cantidad de mujeres al terminar la simulacion: "+ str(CMujeres))
+    print("Cantidad de hombres al terminar la simulacion: "+ str(CHombres))
+    print("Cantidad de Embarazos: "+str(Poblacion.CTEmbarazos))
+    print("Cantidad de Embarazos Multiples: "+str(Poblacion.CEMultiples))
+    print("Cantidad de Embarazos al terminar la simulacion: "+str(Poblacion.CAEmbarazadas))
+    print("Cantidad de Fallecidos: "+ str(Poblacion.CFallecidos))
+    plt.figure()
+    plt.plot(Poblacion.Time,Poblacion.Nac, linewidth = 1, color='green', label="Nacimientos")
+    plt.plot(Poblacion.Time,Poblacion.Fal, linewidth = 1, color='red', label="Fallecidos")
+    plt.title("Comportamiento de la Poblacion")
+    plt.xlabel("Tiempo en años transcurridos")
+    plt.ylabel("Poblacion Total")
+    plt.legend()
+    plt.xlim([0,Poblacion.TFinal])
+    plt.ylim([0,Poblacion.PoblacionT])
+    plt.show()
     
 
 

@@ -1,0 +1,6 @@
+Para ejecutar el Programa:
+1.- Abrir una terminar en la direccion de la carpeta
+2.- Correr la linea: python poblacion.py
+3.- Seguir las instrucciones
+
+En la carpeta doc esta el informe e imágenes de ejemplos de su ejecución
